@@ -38,9 +38,11 @@ onMounted(() => {
 <template>
   <button @click="toggleTheme">Toggle Theme</button>
   <button @click="setDefaultTheme">Set Default Theme</button>
-  <component :is="currentLayout || ''">
+  <component :is="currentLayout" v-if="currentLayout">
     <RouterView />
   </component>
+  
+  <RouterView v-else />
   <FooterView />
 </template>
 

@@ -4,8 +4,9 @@ import { useAuthActions } from '@/hooks/useAuthActions'
 
 interface User {
   id: number
-  name: string
-  email: string
+  login: string
+  email?: string
+  created_at: string
   [key: string]: any
 }
 
@@ -24,24 +25,28 @@ export const useAuthStore = defineStore('auth', () => {
   })
 
   const getUser = computed(() => user.value)
-
   const getToken = computed(() => userToken.value)
 
   // Actions
-  async function login(credentials: { email: string, password: string }) {
+  async function login(credentials: { login: string, password: string, email?: string }) {
     try {
       isLoading.value = true
       const data = await authActions.login(credentials)
       
+      // Оновлюємо стан
       user.value = data.user
       userToken.value = data.token
+      localStorage.setItem('user_token', data.token)
       
       return { success: true, user: data.user }
     } catch (error: any) {
-      console.error('Login error:', error)
+      // Обробка помилок для UI
+      const errorMessage = error?.message || 'Помилка входу'
+      console.error('[useAuthStore] Login error:', errorMessage)
+      
       return { 
         success: false, 
-        error: error.response?.data?.message || error.message || 'Помилка входу' 
+        error: errorMessage
       }
     } finally {
       isLoading.value = false
@@ -71,6 +76,31 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  async function registerUser(credentials: { login: string, password: string, email?: string }) {
+    try {
+      isLoading.value = true
+      const data = await authActions.registerUser(credentials)
+      
+      // Оновлюємо стан
+      user.value = data.user
+      userToken.value = data.token
+      localStorage.setItem('user_token', data.token)
+      
+      return { success: true, user: data.user }
+    } catch (error: any) {
+      // Обробка помилок для UI
+      const errorMessage = error?.message || 'Помилка реєстрації'
+      console.error('[useAuthStore] Register error:', errorMessage)
+      
+      return { 
+        success: false, 
+        error: errorMessage
+      }
+    } finally {
+      isLoading.value = false
+    }
+  }
+
   async function fetchUser() {
     const token = localStorage.getItem('user_token')
     if (!token) {
@@ -84,16 +114,18 @@ export const useAuthStore = defineStore('auth', () => {
       const fetchedUser = await authActions.getCurrentUser()
       
       if (fetchedUser) {
+        // Користувач знайдений - оновлюємо стан
         user.value = fetchedUser
-        userToken.value = token
+        userToken.value = token // Токен беремо з localStorage, не з user
       } else {
-        // Токен невалідний
+        // Токен невалідний - очищаємо стан
         user.value = null
         userToken.value = null
         localStorage.removeItem('user_token')
       }
     } catch (error: any) {
-      console.error('Fetch user error:', error)
+      // Помилка при отриманні користувача - очищаємо стан тільки якщо це помилка авторизації
+      console.error('[useAuthStore] Fetch user error:', error)
       user.value = null
       userToken.value = null
       localStorage.removeItem('user_token')
@@ -103,12 +135,16 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   // Ініціалізація при завантаженні store
-  function init() {
+  // Повертає Promise, щоб можна було дочекатися завершення
+  async function init() {
     const token = localStorage.getItem('user_token')
     if (token) {
       userToken.value = token
-      // Завантажуємо користувача з API
-      fetchUser()
+      // Завантажуємо користувача з API і чекаємо завершення
+      await fetchUser()
+    } else {
+      user.value = null
+      userToken.value = null
     }
   }
 
@@ -126,6 +162,7 @@ export const useAuthStore = defineStore('auth', () => {
     // Actions
     login,
     logout,
+    registerUser,
     fetchUser,
     init
   }

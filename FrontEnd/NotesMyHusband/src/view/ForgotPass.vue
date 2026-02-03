@@ -5,7 +5,7 @@ import { RouterLink } from 'vue-router'
 import FormComponent from '../components/FormComponent.vue'
 
 const fields = {
-  email: { type: 'email', required: true, placeholder: 'Email' }
+  email: { type: 'email', name: 'email', required: true, placeholder: 'Email' }
 }
 
 const handleSubmit = (data: any) => {

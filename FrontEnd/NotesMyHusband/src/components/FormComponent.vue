@@ -1,22 +1,29 @@
 <script setup lang="ts">
-
+import { ref } from 'vue'
 
 // 1. Оголошуємо еміти (в TS краще через типізацію)
 const props = defineProps<{
   isSending?: boolean
-  fields: Record<string, { type: string, required: boolean, placeholder: string }>
+  fields?: Record<string, { type: string, name: string, required: boolean, placeholder: string }>
+  errorMessage?: string
+  successMessage?: string
 }>()
 const emit = defineEmits<{
   (e: 'submit', data: object): void
 }>()
+
+const id = ref(Math.random().toString(36).substring(2, 15))
 
 // 2. Оголошуємо дані форми
 
 // 3. Функція обробки
 const handleSubmit = (e: Event) => {
   const formData = new FormData(e.target as HTMLFormElement)
-  emit('submit', formData)
+  const data = Object.fromEntries(formData.entries())
+  console.log(data)
+  emit('submit', data)
 }
+
 </script>
 
 <template>
@@ -25,8 +32,8 @@ const handleSubmit = (e: Event) => {
     <template v-if="props.fields">
       <template v-for="(field, index) in props.fields" :key="index">
         <div>
-          <label :for="field.type">{{ field.type }}</label>
-          <input :name="field.type" :type="field.type" :id="field.type" />
+          <label :for="`${field.name}-${id}`">{{ field.name }}</label>
+          <input :name="field.name" :type="field.type" :id="`${field.name}-${id}`" />
         </div>
 
       </template>
@@ -34,12 +41,12 @@ const handleSubmit = (e: Event) => {
     <template v-else>
       <slot >
         <div>
-          <label for="email">Email</label>
-          <input name="email" type="email" id="email" />
+          <label :for="`login-${id}`">Login</label>
+          <input name="login" type="text" :id="`login-${id}`" />
         </div>
         <div>
-          <label for="password">Password</label>
-          <input name="password" type="password" id="password" />
+          <label :for="`password-${id}`">Password</label>
+          <input name="password" type="password" :id="`password-${id}`" />
         </div>
       </slot>
     </template>
@@ -49,8 +56,14 @@ const handleSubmit = (e: Event) => {
         <p>Sending...</p>
       </div>
     </template>
-
+    <div v-if="props.successMessage" class="success-message">
+      {{ props.successMessage }}
+    </div>
+    <div v-if="props.errorMessage" class="error-message">
+      {{ props.errorMessage }}
+    </div>
 </form>
+
 </template>
 
 <style scoped>
@@ -96,5 +109,25 @@ form {
     background-color: #f0f0f0;
   }
 
+}
+
+.success-message {
+  color: #008000;
+  background-color: #e6ffe6;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
+}
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 5px;
+  margin-top: 10px;
+  text-align: center;
+  font-size: 14px;
 }
 </style>

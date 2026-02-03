@@ -1,0 +1,46 @@
+scalar DateTime @scalar(class: "Nuwave\\Lighthouse\\Schema\\Types\\Scalars\\DateTime")
+
+type User {
+    id: ID!
+    login: String!
+    email: String
+    created_at: DateTime!
+    updated_at: DateTime!
+}
+
+type Note {
+    id: ID!
+    author_id: Int!
+    author: User! @belongsTo(relation: "author")
+    content: String!
+    created_at: DateTime!
+    updated_at: DateTime!
+    recipients: [User!]! @belongsToMany(relation: "recipients")
+}
+
+type AuthPayload {
+    token: String!
+    user: User!
+}
+
+type Query {
+    me: User @guard @field(resolver: "App\\GraphQL\\Queries\\Me")
+    users: [User!]! @guard @field(resolver: "App\\GraphQL\\Queries\\Users")
+    myNotes: [Note!]! @guard @field(resolver: "App\\GraphQL\\Queries\\MyNotes")
+    receivedNotes: [Note!]! @guard @field(resolver: "App\\GraphQL\\Queries\\ReceivedNotes")
+    note(id: Int!): Note @guard @field(resolver: "App\\GraphQL\\Queries\\NoteById")
+    pinnedUsers: [User!]! @guard @field(resolver: "App\\GraphQL\\Queries\\PinnedUsers")
+    blockedUsers: [User!]! @guard @field(resolver: "App\\GraphQL\\Queries\\BlockedUsers")
+}
+
+type Mutation {
+    register(login: String!, password: String!, email: String): AuthPayload! @field(resolver: "App\\GraphQL\\Mutations\\Register")
+    login(login: String!, password: String!): AuthPayload! @field(resolver: "App\\GraphQL\\Mutations\\Login")
+    createNote(content: String!, recipient_ids: [Int!]): Note! @guard @field(resolver: "App\\GraphQL\\Mutations\\CreateNote")
+    updateNote(id: Int!, content: String!): Note! @guard @field(resolver: "App\\GraphQL\\Mutations\\UpdateNote")
+    deleteNote(id: Int!): Boolean! @guard @field(resolver: "App\\GraphQL\\Mutations\\DeleteNote")
+    pinUser(user_id: Int!): Boolean! @guard @field(resolver: "App\\GraphQL\\Mutations\\PinUser")
+    unpinUser(user_id: Int!): Boolean! @guard @field(resolver: "App\\GraphQL\\Mutations\\UnpinUser")
+    blockUser(user_id: Int!): Boolean! @guard @field(resolver: "App\\GraphQL\\Mutations\\BlockUser")
+    unblockUser(user_id: Int!): Boolean! @guard @field(resolver: "App\\GraphQL\\Mutations\\UnblockUser")
+}

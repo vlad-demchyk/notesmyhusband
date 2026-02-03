@@ -87,7 +87,7 @@ class Auth
         return password_verify($password, $hash);
     }
 
-    public static function login($login, $password)
+    public static function login($login, $password): array | null
     {
         $db = Database::getInstance()->getConnection();
         $stmt = $db->prepare("SELECT id, login, password FROM users WHERE login = ?");

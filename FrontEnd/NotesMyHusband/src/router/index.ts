@@ -40,17 +40,33 @@ const router = createRouter({
 })
 
 
-router.beforeEach((to, from) => {
+router.beforeEach(async (to, from, next) => {
   const isAuthRequired = to.matched.some(record => record.meta.requiresAuth)
-
-  // Отримуємо стор (він вже ініціалізований в main.ts)
   const authStore = useAuthStore()
+
+  // Якщо store ще завантажується, чекаємо завершення
+  if (authStore.isLoading) {
+    // Чекаємо завершення завантаження (максимум 2 секунди)
+    const maxWait = 2000
+    const startTime = Date.now()
+    while (authStore.isLoading && (Date.now() - startTime) < maxWait) {
+      await new Promise(resolve => setTimeout(resolve, 50))
+    }
+  }
 
   // Перевіряємо авторизацію через стор
   if (isAuthRequired && !authStore.isAuthenticated) {
-    return '/login'
-  } else if (to.path === '/login' && authStore.isAuthenticated) {
-    return '/'
+    // Зберігаємо URL, на який хотів перейти користувач
+    next({
+      path: '/login',
+      query: { redirect: to.fullPath }
+    })
+  } else if ((to.path === '/login' || to.path === '/register') && authStore.isAuthenticated) {
+    // Якщо вже авторизований і намагається зайти на сторінку логіну
+    const redirect = to.query.redirect as string
+    next(redirect || '/')
+  } else {
+    next()
   }
 })
 

@@ -8,24 +8,42 @@ const router = useRouter()
 const authStore = useAuthStore()
 const logActive = ref(false)
 const isSending = ref(false)
-
+const errorMessage = ref<string | null>(null)
+const successMessage = ref<string | null>(null)
+const fields = {
+  login: { type: 'text', name: 'login', required: true, placeholder: 'Login' },
+  password: { type: 'password', name: 'password', required: true, placeholder: 'Password' },
+}
 
 const handleLogin = async (data: any) => {
   if (isSending.value) return
   isSending.value = true
-  const result = await authStore.login({
-    email: data.email,
-    password: data.password
-  })
+  errorMessage.value = null // Очищаємо попередню помилку
+  successMessage.value = null // Очищаємо попереднє повідомлення про успіх
+  
+  try {
+    const result = await authStore.login({
+      login: data.login,
+      password: data.password
+    })
 
-  if (result.success) {
-    // Перенаправляємо на головну сторінку після успішного входу
-    router.push('/')
-  } else {
-    // Показуємо помилку (можна додати toast або alert)
-    console.log(result.error || 'Помилка входу')
+    if (result.success) {
+      successMessage.value = 'Вхід успішний'
+      // Перенаправляємо на сторінку, з якої прийшов користувач, або на головну
+      const redirect = router.currentRoute.value.query.redirect as string
+      router.push(redirect || '/')
+    } else {
+      // Показуємо помилку користувачу
+      errorMessage.value = result.error || 'Помилка входу'
+      console.error('Login error:', result.error)
+    }
+  } catch (error: any) {
+    // Додаткова обробка несподіваних помилок
+    errorMessage.value = error?.message || 'Несподівана помилка'
+    console.error('Unexpected login error:', error)
+  } finally {
+    isSending.value = false
   }
-  isSending.value = false
 }
 </script>
 
@@ -34,7 +52,8 @@ const handleLogin = async (data: any) => {
     <h1>Benvenuto!</h1>
     <p>Ora sei nella sezione di autenticazione.</p>
     <button v-if="!logActive" @click="logActive = !logActive">Login</button>
-    <FormComponent v-else @submit="handleLogin" :isSending="isSending"></FormComponent>
+      <FormComponent v-else @submit="handleLogin" :isSending="isSending" :fields="fields" :errorMessage="errorMessage" :successMessage="successMessage"></FormComponent>
+
     <RouterLink to="/register">Register</RouterLink>
     <RouterLink to="/forgot-password">Forgot password</RouterLink>
   </div>

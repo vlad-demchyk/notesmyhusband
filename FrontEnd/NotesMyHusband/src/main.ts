@@ -1,22 +1,24 @@
 import { createApp } from 'vue'
+import { DefaultApolloClient } from '@vue/apollo-composable'
+import { apolloClient } from './hooks/apolloClient'
 import { createPinia } from 'pinia'
 
 import App from './App.vue'
 import router from './router'
 import { useAuthStore } from './stores/useAuthStore'
-import { seedDatabase } from './data/seed'
 
-const app = createApp(App)
+async function initApp() {
+  const app = createApp(App)
 
-const pinia = createPinia()
-app.use(pinia)
-app.use(router)
+  app.provide(DefaultApolloClient, apolloClient) // Надаємо клієнт через метод app
+  app.use(createPinia())
+  app.use(router)
 
-// Ініціалізуємо auth store після створення pinia
-const authStore = useAuthStore()
-authStore.init()
+  // Ініціалізуємо store та чекаємо завершення перед монтуванням
+  const authStore = useAuthStore()
+  await authStore.init()
 
-// Заповнюємо локальну базу тестовими даними (тільки якщо вона порожня)
-seedDatabase()
+  app.mount('#app')
+}
 
-app.mount('#app')
+initApp()
