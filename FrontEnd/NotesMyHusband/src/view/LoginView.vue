@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref, useTemplateRef } from 'vue'
 import { useRouter } from 'vue-router'
 import FormComponent from '../components/FormComponent.vue'
 import { useAuthStore } from '../stores/useAuthStore'
@@ -7,6 +7,20 @@ import { useAuthStore } from '../stores/useAuthStore'
 const router = useRouter()
 const authStore = useAuthStore()
 const logActive = ref(false)
+const form = useTemplateRef('formLogin')
+
+onMounted(() => {
+  const clicker = (e: MouseEvent) => {
+    if (!form.value || !form.value.$el.contains(e.target as Node)) {
+      logActive.value = false
+    }
+  }
+  window.addEventListener('mousedown', clicker)
+  return () => {
+    window.removeEventListener('mousedown', clicker)
+  }
+})
+
 const isSending = ref(false)
 const errorMessage = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
@@ -20,23 +34,18 @@ const handleLogin = async (data: any) => {
   isSending.value = true
   errorMessage.value = null // Очищаємо попередню помилку
   successMessage.value = null // Очищаємо попереднє повідомлення про успіх
-  
+
   try {
-    const result = await authStore.login({
+    await authStore.login({
       login: data.login,
       password: data.password
     })
 
-    if (result.success) {
-      successMessage.value = 'Вхід успішний'
-      // Перенаправляємо на сторінку, з якої прийшов користувач, або на головну
-      const redirect = router.currentRoute.value.query.redirect as string
-      router.push(redirect || '/')
-    } else {
-      // Показуємо помилку користувачу
-      errorMessage.value = result.error || 'Помилка входу'
-      console.error('Login error:', result.error)
-    }
+    successMessage.value = 'Вхід успішний'
+    // Перенаправляємо на сторінку, з якої прийшов користувач, або на головну
+    const redirect = router.currentRoute.value.query.redirect as string
+    router.push(redirect || '/')
+
   } catch (error: any) {
     // Додаткова обробка несподіваних помилок
     errorMessage.value = error?.message || 'Несподівана помилка'
@@ -52,7 +61,8 @@ const handleLogin = async (data: any) => {
     <h1>Benvenuto!</h1>
     <p>Ora sei nella sezione di autenticazione.</p>
     <button v-if="!logActive" @click="logActive = !logActive">Login</button>
-      <FormComponent v-else @submit="handleLogin" :isSending="isSending" :fields="fields" :errorMessage="errorMessage" :successMessage="successMessage"></FormComponent>
+    <FormComponent ref="formLogin" v-else @submit="handleLogin" :isSending="isSending" :fields="fields"
+      :errorMessage="errorMessage" :successMessage="successMessage"></FormComponent>
 
     <RouterLink to="/register">Register</RouterLink>
     <RouterLink to="/forgot-password">Forgot password</RouterLink>

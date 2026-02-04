@@ -1,32 +1,30 @@
 :root {
-    --color-primary: #1b002d;
-    --color-primary-light: #ececec;
-    --color-secondary: black;
-    --color-background: #1b002d;
-    --color-text: #fff;
+  --color-primary: #1b002d;
+  --color-primary-light: #ececec;
+  --color-secondary: #000000;
+  --color-background: #000000;
+  --color-text: #fff;
 }
 
-:is([data-theme="light"]) {
+:is([data-theme='light']) {
+  --color-primary: #1b002d;
+  --color-primary-light: #2a003d;
+  --color-secondary: #fff;
+  --color-background: #fff;
+  --color-text: #000;
+}
+
+:is([data-theme='auto']) {
+  @media (prefers-color-scheme: light) {
     --color-primary: #1b002d;
     --color-primary-light: #2a003d;
     --color-secondary: #fff;
     --color-background: #fff;
     --color-text: #000;
+  }
 }
-
-:is([data-theme="auto"]) {
-    @media (prefers-color-scheme: light) {
-        --color-primary: #1b002d;
-        --color-primary-light: #2a003d;
-        --color-secondary: #fff;
-        --color-background: #fff;
-        --color-text: #000;
-    }
-}
-
 
 body {
-    background-color: var(--color-background);
-    color: var(--color-text);
-
+  background-color: var(--color-background);
+  color: var(--color-text);
 }

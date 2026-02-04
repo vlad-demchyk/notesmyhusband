@@ -39,7 +39,7 @@ const handleSubmit = (e: Event) => {
       </template>
     </template>
     <template v-else>
-      <slot >
+      <slot>
         <div>
           <label :for="`login-${id}`">Login</label>
           <input name="login" type="text" :id="`login-${id}`" />
@@ -62,7 +62,7 @@ const handleSubmit = (e: Event) => {
     <div v-if="props.errorMessage" class="error-message">
       {{ props.errorMessage }}
     </div>
-</form>
+  </form>
 
 </template>
 
