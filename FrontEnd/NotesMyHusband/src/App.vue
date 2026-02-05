@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeMount } from 'vue'
+import { onBeforeMount, ref } from 'vue'
 import './css/main.css'
 import { useRoute } from 'vue-router'
 import { computed } from 'vue'
@@ -16,9 +16,10 @@ const layouts = {
   NotFound: NotFoundView
 }
 const currentLayout = computed(() => layouts[route.meta.layout])
+const themeIsActive = ref(localStorage.getItem('theme') || 'light')
 
 const toggleTheme = (theme: string) => {
-
+  themeIsActive.value = theme
   localStorage.setItem('theme', theme)
   document.documentElement.setAttribute('data-theme', theme)
 }
@@ -33,7 +34,7 @@ onBeforeMount(() => {
   <!-- <button @click="toggleTheme()">Toggle Theme</button> -->
   <HeaderView>
     <h1>Notes My Husband</h1>
-    <ThemeToggle @themeChanged="toggleTheme" />
+    <ThemeToggle :theme="themeIsActive" @themeChanged="toggleTheme" />
   </HeaderView>
   <component :is="currentLayout" v-if="currentLayout">
     <RouterView />
